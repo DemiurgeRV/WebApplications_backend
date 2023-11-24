@@ -1,0 +1,27 @@
+{% extends 'main/base.html' %}
+
+{% load static %}
+
+{% block title %}Обработка Фотографий{% endblock %}
+
+{% block content %}
+    <h1 class="header">Добро Пожаловать на сервис обработки фотографий!</h1>
+    <p class="header">Выберите необходимую операцию для создания своего идеального снимка</p>
+    <ul class="card_list">
+        {% for filter in data.filters %}
+           <a href="{% url 'filter_url' filter.id %}"> <li class="card" title="Подробнее...">
+               <div class="box-text">
+               <div class="images">
+                    <img src="{% static '' %}{{ filter.image_url }} " class="images">
+                </div>
+                   <br>
+               <h3>{{ filter.name }}</h3><br>
+                   Стоимость Услуги - {{ filter.price }}₽<br>
+                   Время выполнения работы - {{ filter.time }} сут.
+               </div>
+            </li></a>
+        {% empty %}
+            <li>Пусто</li>
+        {% endfor %}
+    </ul>
+{% endblock %}
