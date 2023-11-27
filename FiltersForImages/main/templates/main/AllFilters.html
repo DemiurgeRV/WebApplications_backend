@@ -7,6 +7,7 @@
 {% block content %}
     <h1 class="header">Добро Пожаловать на сервис обработки фотографий!</h1>
     <p class="header">Выберите необходимую операцию для создания своего идеального снимка</p>
+    <span class="search"></span>
     <ul class="card_list">
         {% for filter in data.filters %}
            <a href="{% url 'filter_url' filter.id %}"> <li class="card" title="Подробнее...">
