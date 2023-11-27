@@ -1,6 +1,8 @@
 html {
     background: #292929;
     color: white;
+    font-family: cursive;
+    overflow-x: hidden;
 }
 
 .header {
@@ -10,7 +12,7 @@ html {
 }
 
 p {
-    font-size: 20px;
+    font-size: 1.3rem;
 }
 
 .card_list {
@@ -19,6 +21,9 @@ p {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
+    position: relative;
+    left: -23px;
+    top: -40px;
 }
 
 .card {
@@ -32,13 +37,6 @@ p {
     height: 350px;
     width: 300px;
     position: relative;
-    font-family: cursive;
-}
-
-.box-text {
-   position: absolute;               /* 2 */
-   top: 50%;                         /* 3 */
-   transform: translate(0, -50%)
 }
 
 .card:hover {
@@ -49,6 +47,13 @@ p {
 
 .card h3 {
     text-align: center;
+    margin: 0;
+}
+
+.box-content {
+   position: absolute;
+   top: 50%;
+   transform: translate(0, -50%)
 }
 
 a {
@@ -56,10 +61,55 @@ a {
     text-decoration: none;
 }
 
-h3 {
-    margin: 0;
-}
-
 .images {
     width: 300px;
+}
+
+#search {
+    text-align: left;
+    position: relative;
+    top: -100px;
+    left: 70px;
+}
+
+#search label {
+    font-size: 18px;
+}
+
+#search-bar{
+    padding: 5px;
+    font-size: 14px;
+    border: 2px solid #ccc;
+    border-radius: 10px; /* Round the corners */
+    outline: none; /* Remove the input outline */
+}
+
+#search-bottom {
+    background-color: #f0b71d;
+    color: #fff;
+    border: 3px solid #d18e11;
+    border-radius: 10px; /* Round the corners */
+    padding: 5px 10px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: transform .4s ease;
+}
+
+#search-bottom:hover {
+    transform: scale(1.08);
+    background-color: #d69d20;
+    border: 3px solid #c46c00;
+}
+
+.empty {
+    font-size: 2rem;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+img {
+    float: right;
+    position: relative;
+    top: -8px;
+    left: 7px;
 }

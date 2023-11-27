@@ -7,11 +7,17 @@
 {% block content %}
     <h1 class="header">Добро Пожаловать на сервис обработки фотографий!</h1>
     <p class="header">Выберите необходимую операцию для создания своего идеального снимка</p>
-    <span class="search"></span>
+    <span id="search">
+        <form action="" method="get">
+            <label>Введите услугу: </label><br>
+            <input type="text" name="find" placeholder="Поиск" autocomplete="off" id="search-bar"><br>
+            <input type="submit" value="Найти" id="search-bottom">
+        </form>
+    </span>
     <ul class="card_list">
         {% for filter in data.filters %}
            <a href="{% url 'filter_url' filter.id %}"> <li class="card" title="Подробнее...">
-               <div class="box-text">
+               <div class="box-content">
                <div class="images">
                     <img src="{% static '' %}{{ filter.image_url }} " class="images">
                 </div>
@@ -22,7 +28,7 @@
                </div>
             </li></a>
         {% empty %}
-            <li>Пусто</li>
+            <div class="empty">Ничего не найдено<img src="{% static 'main/img/sad.png' %}"></div>
         {% endfor %}
     </ul>
 {% endblock %}
