@@ -1,6 +1,6 @@
 from django.shortcuts import render
 
-data = { 'data': {'filters': [
+data = {'data': {'filters': [
             {'name': 'Обрезка и поворот', 'id': 1, 'image_url': 'main/img/editor-img.png',
              'price': '25', 'time': '1-2'},
             {'name': 'Коррекция изображения', 'id': 2, 'image_url': 'main/img/preset-img.jpg',
@@ -27,6 +27,9 @@ def getFilters(request):
         return render(request, 'main/AllFilters.html', data)
 
 def getFilter(request, id):
-    return render(request, 'main/OneFilter.html', {'data': {
-        'id': id
-    }})
+    arrFilters = data['data']['filters']
+    choice = {}
+    for filter in arrFilters:
+        if filter['id'] == id:
+            choice = filter
+    return render(request, 'main/OneFilter.html', choice)
