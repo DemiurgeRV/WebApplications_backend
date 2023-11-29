@@ -1,5 +1,15 @@
 {% extends 'main/base.html' %}
 
-{% block title %}Фильтр{% endblock %}
+{% load static %}
 
-{% block content %}<h1 class="header">Услуга {{ data.id }} </h1>{% endblock %}
+{% block title %}{{ name }}{% endblock %}
+
+{% block content %}
+<h1 class="header">{{ name }}</h1>
+<div class="about-filter">
+    <img src="{% static image_url2 %}" id="solo-img">
+    {{ text }}<br><br><br>
+    Стоимость услуги - {{ price }}₽<br>
+    Время выполнения работы - {{ time }} сут.
+</div>
+{% endblock %}
