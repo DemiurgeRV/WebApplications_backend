@@ -57,7 +57,10 @@ def getFilters(request):
         for filter in data['data']['filters']:
             if input_text in filter['name']:
                 info.append(filter)
-        return render(request, 'main/AllFilters.html', { 'data' : { 'filters' : info }})
+        return render(request, 'main/AllFilters.html', { 'data' : { 'filters' : info,
+                                                                    'input' : input_text
+                                                                    }
+                                                         })
 
     else:
         return render(request, 'main/AllFilters.html', data)
