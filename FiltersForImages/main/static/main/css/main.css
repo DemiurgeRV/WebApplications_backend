@@ -77,19 +77,19 @@ a {
     font-size: 18px;
 }
 
-#search-bar{
+#search-filter{
     padding: 5px;
     font-size: 14px;
     border: 2px solid #ccc;
-    border-radius: 10px; /* Round the corners */
-    outline: none; /* Remove the input outline */
+    border-radius: 10px;
+    outline: none;
 }
 
 #search-bottom {
     background-color: #f0b71d;
     color: #fff;
     border: 3px solid #d18e11;
-    border-radius: 10px; /* Round the corners */
+    border-radius: 10px;
     padding: 5px 10px;
     font-size: 16px;
     cursor: pointer;

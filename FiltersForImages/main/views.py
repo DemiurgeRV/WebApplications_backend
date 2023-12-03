@@ -52,7 +52,7 @@ data = {'data': {'filters': [
 
 def getFilters(request):
     info = []
-    input_text = request.GET.get('find')
+    input_text = request.GET.get('search-filter')
     if input_text is not None:
         for filter in data['data']['filters']:
             if input_text in filter['name']:
