@@ -55,7 +55,7 @@ def getFilters(request):
     input_text = request.GET.get('search-filter')
     if input_text is not None:
         for filter in data['data']['filters']:
-            if input_text in filter['name']:
+            if input_text.lower() in filter['name'].lower():
                 info.append(filter)
         return render(request, 'main/AllFilters.html', { 'data' : { 'filters' : info,
                                                                     'input' : input_text
