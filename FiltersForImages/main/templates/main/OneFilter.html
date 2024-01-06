@@ -6,6 +6,7 @@
 
 {% block content %}
 <h1 class="header">{{ name }}</h1>
+<a id="toHomePage" href="{% url 'toHome' %}">На главную</a>
 <div class="about-filter">
     <img src="{% static image_url2 %}" id="solo-img">
     {{ text }}<br><br><br>
