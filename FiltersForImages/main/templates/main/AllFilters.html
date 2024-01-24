@@ -5,30 +5,27 @@
 {% block title %}Обработка Фотографий{% endblock %}
 
 {% block content %}
-    <h1 class="header">Добро Пожаловать на сервис обработки фотографий!</h1>
-    <p class="header">Выберите необходимую операцию для создания своего идеального снимка</p>
-    <span id="search">
-        <form action="" method="get">
-            <label>Введите услугу: </label><br>
-            <input type="text" name="search-filter" placeholder="Поиск" autocomplete="off" id="search-filter" value="{{ data.input }}"><br>
-            <input type="submit" value="Найти" id="search-button">
-        </form>
-    </span>
-    <ul class="card_list">
-        {% for filter in data.filters %}
+<div class="content-wrapper">
+    <div class="cards-wrapper">
+        <div class="top">
+            <h2>Применение фильтров к изображению</h2>
+            <span id="search">
+                <form action="" method="get">
+                    <input type="text" name="search-filter" placeholder="Поиск" autocomplete="off" id="search-filter" value="{{ data.input }}">
+                    <input type="submit" value="Найти" id="search-button">
+                </form>
+            </span>
+        </div>
+        <ul class="card-list">
+            {% for filter in data.filters %}
            <a href="{% url 'filter_url' filter.id %}"> <li class="card" title="Подробнее...">
-               <div class="box-content">
-               <div class="images">
-                    <img src="{% static '' %}{{ filter.image_url }} " class="images">
-                </div>
-                   <br>
+               <img src="{% static '' %}{{ filter.image_url }} " class="images">
                <h3>{{ filter.name }}</h3><br>
-                   Стоимость Услуги - {{ filter.price }}₽<br>
-                   Время выполнения работы - {{ filter.time }} сут.
-               </div>
-            </li></a>
+           </li></a>
         {% empty %}
             <div class="empty">Ничего не найдено<img src="{% static 'main/img/sad.png' %}" class="sad-img"></div>
         {% endfor %}
-    </ul>
+        </ul>
+    </div>
+</div>
 {% endblock %}

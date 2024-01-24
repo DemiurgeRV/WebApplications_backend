@@ -2,7 +2,7 @@ from django.shortcuts import render
 
 data = {'data': {'filters': [
             {'name': 'Обрезка и поворот', 'id': 1, 'image_url': 'main/img/editor-img.png',
-             'image_url2': 'main/img/editor-img2.jpg',
+             'image_url2': 'main/img/editor-img2.png',
              'price': '25', 'time': '1-2',
              "text": """Самыми востребованными в фоторедактировании являются такие базовые операции, 
              как обрезка и поворот изображений. 
