@@ -116,3 +116,7 @@ html {
 .content-wrapper .filter-details .right {
       width: calc(100% - 550px);
 }
+
+.empty {
+    font-size: 21px;
+}
