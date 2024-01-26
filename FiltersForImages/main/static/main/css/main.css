@@ -83,7 +83,9 @@ html {
     width: 100%;
     height: 200px;
 }
-
+.content-wrapper .cards-wrapper .card-list .card h3 {
+    padding: 0px 8px;
+}
 
 .content-wrapper .filter-details {
     display: flex;
