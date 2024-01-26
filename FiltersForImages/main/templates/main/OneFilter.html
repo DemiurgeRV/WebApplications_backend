@@ -10,7 +10,7 @@
     <div class="filter-details">
         <a class="to-home" href="{% url 'Home' %}">Назад</a>
         <div class="left">
-            <img src="{% static image_url %}">
+            <img src="{{ filter.get_image_url }}">
         </div>
         <div class="right">
             <div class="filter-info">

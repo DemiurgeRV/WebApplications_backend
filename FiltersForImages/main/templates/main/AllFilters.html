@@ -19,7 +19,7 @@
         <ul class="card-list">
             {% for filter in data.filters %}
            <a href="{% url 'filter_url' filter.id %}"> <li class="card" title="Подробнее...">
-               <img src="{% static '' %}{{ filter.image_url }} " class="images">
+               <img src="{{ filter.get_image_url }}" class="images">
                <h3>{{ filter.name }}</h3><br>
            </li></a>
         {% empty %}

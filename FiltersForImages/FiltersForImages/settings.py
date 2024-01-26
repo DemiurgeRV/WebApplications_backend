@@ -131,3 +131,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 STATICFILES_DIRS = [
    os.path.join(BASE_DIR, "static"),
 ]
+
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+AWS_STORAGE_BUCKET_NAME = 'images'
+AWS_ACCESS_KEY_ID = 'greiXPPvPD4P52Sr2Xny'
+AWS_SECRET_ACCESS_KEY = 'iR2TT66LMagbsmngBIRIh86EzFk3GbEZ2tXchLkQ'
+AWS_S3_ENDPOINT_URL = 'http://127.0.0.1:9000'
