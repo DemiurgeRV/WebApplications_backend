@@ -16,6 +16,10 @@ class Filters(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        verbose_name="Фильтр"
+        verbose_name_plural="Фильтры"
+
 class Orders(models.Model):
     STATUS_CHOICES = [
         (1, 'Введён'),
@@ -35,6 +39,10 @@ class Orders(models.Model):
     def __str__(self):
         return "Заказ №" + str(self.pk)
 
+    class Meta:
+        verbose_name = "Заказ"
+        verbose_name_plural = "Заказы"
+
 class Users(models.Model):
     first_name = models.CharField(max_length=50, verbose_name="Имя")
     last_name = models.CharField(max_length=50, verbose_name="Фамилия")
@@ -45,6 +53,10 @@ class Users(models.Model):
 
     def __str__(self):
         return self.login
+
+    class Meta:
+        verbose_name = "Пользователь"
+        verbose_name_plural = "Пользователи"
 
 class FilterOrder(models.Model):
     filter = models.ForeignKey("Filters", on_delete=models.CASCADE)

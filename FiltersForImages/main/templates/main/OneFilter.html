@@ -2,7 +2,7 @@
 
 {% load static %}
 
-{% block title %}{{ name }}{% endblock %}
+{% block title %}{{ filter.name }}{% endblock %}
 
 {% block content %}
 
@@ -14,9 +14,9 @@
         </div>
         <div class="right">
             <div class="filter-info">
-                <h2>{{ name }}</h2><br>
-                <span>Описание: {{ text }}</span><br><br>
-                <span>Цена: {{ price }}₽</span>
+                <h2>{{ filter.name }}</h2><br>
+                <span>Описание: {{ filter.description }}</span><br><br>
+                <span>Цена: {{ filter.price }}₽</span>
             </div>
         </div>
     </div>
