@@ -1,4 +1,7 @@
-from django.shortcuts import render
+from django.db import connection
+from django.shortcuts import render, redirect
+
+
 from .models import *
 
 def getFilters(request):
@@ -13,3 +16,9 @@ def getFilters(request):
 def getFilter(request, id):
     filter = Filters.objects.filter(id=id)
     return render(request, 'main/OneFilter.html', {'filter': filter[0]})
+
+def delete_filter(request, id):
+    filter = Filters.objects.get(id=id)
+    with connection.cursor() as cursor:
+        cursor.execute("UPDATE main_filters SET status = 2 WHERE id = %s", [filter.pk])
+    return redirect('/home')

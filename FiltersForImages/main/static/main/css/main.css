@@ -64,6 +64,7 @@ html {
     grid-column-gap: 25px;
     grid-row-gap: 25px;
     justify-content: center;
+    color: #fff;
 }
 .content-wrapper .cards-wrapper .card-list .card {
     background: #72089c;
@@ -73,11 +74,18 @@ html {
     color: #fff;
     transition: transform .3s ease;
     max-width: 300px;
-    height: 320px;
+    height: 350px;
 }
 .content-wrapper .cards-wrapper .card-list .card:hover {
     transform: scale(1.05);
     box-shadow: 0 18px 36px #510d6e, 0 10px 10px #510d6e;
+}
+.content-wrapper .cards-wrapper .card-list .card a {
+    text-decoration: none;
+    color: #fff;
+}
+.content-wrapper .cards-wrapper .card-list .card li {
+    height: 300px;
 }
 .content-wrapper .cards-wrapper .card-list .card img {
     width: 100%;
@@ -86,6 +94,23 @@ html {
 .content-wrapper .cards-wrapper .card-list .card h3 {
     padding: 0px 8px;
 }
+.content-wrapper .cards-wrapper .card-list .card .button {
+    padding: 3% 15px;
+}
+.content-wrapper .cards-wrapper .card-list .card .button .delete_filter {
+    padding: 8px 16px;
+    background: #fff;
+    border-radius: 8px;
+    text-decoration: none;
+    color: black;
+    transition: all .3s ease;
+}
+.content-wrapper .cards-wrapper .card-list .card .button .delete_filter:hover {
+    transform: scale(1.1);
+    background-color: #b5b5b5;
+}
+
+
 
 .content-wrapper .filter-details {
     display: flex;
