@@ -8,9 +8,15 @@ from .serializers import *
 def filters_list(request):                          # список неудаленных фильтров
     input_text = request.GET.get('search-filter', '')
     filters = Filters.objects.filter(name__icontains=input_text).filter(status=1) if input_text else Filters.objects.filter(status=1)
+    order = Orders.objects.filter(status=1)
     serializer = FiltersSerializer(filters, many=True)
 
-    return Response(serializer.data)
+    res = {
+        "filters": serializer.data,
+           "draft_order": order.id if order else None
+    }
+
+    return Response(res)
 
 
 @api_view(['GET'])
@@ -31,6 +37,7 @@ def create_filter(request):                         # создание филь�
         serializer.save()
         filters = Filters.objects.filter(status=1)
         serializer = FiltersSerializer(filters, many=True)
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -44,8 +51,7 @@ def update_filter(request, id):                     # обновление да�
     serializer = FiltersSerializer(filter, data=request.data, partial=True)
     if serializer.is_valid():
         serializer.save()
-        filters = Filters.objects.filter(status=1)
-        serializer = FiltersSerializer(filters, many=True)
+
         return Response(serializer.data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -60,7 +66,37 @@ def delete_filter(request, id):                         # удаление фи�
 
     filters = Filters.objects.filter(status=1)
     serializer = FiltersSerializer(filters, many=True)
+
     return Response(serializer.data)
+
+@api_view(['POST'])
+def add_to_order(request, id):                          # добавление фильтра в заявку
+    if not Filters.objects.filter(id=id).exists():
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    filter = Filters.objects.get(id=id)
+    order = Orders.objects.filter(status=1)
+
+    if order is None:
+        order = Orders.objects.create()
+
+    if FilterOrder.objects.filter(order=order, filter=filter):
+        return Response(status=status.HTTP_409_CONFLICT)
+
+    new_filterorder = FilterOrder.objects.create()
+    new_filterorder.order = order
+    new_filterorder.filter = filter
+    new_filterorder.save()
+
+    serializer = OrdersSerializer(order)
+
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+
+
+
+
 
 
 

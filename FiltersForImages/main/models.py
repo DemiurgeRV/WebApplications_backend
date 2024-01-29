@@ -62,9 +62,9 @@ class Users(models.Model):
         verbose_name_plural = "Пользователи"
 
 class FilterOrder(models.Model):
-    filter = models.ForeignKey("Filters", on_delete=models.CASCADE)
-    order = models.ForeignKey("Orders", on_delete=models.CASCADE)
-    power = models.FloatField(verbose_name="Мощность")
+    filter = models.ForeignKey("Filters", on_delete=models.CASCADE, blank=True, null=True)
+    order = models.ForeignKey("Orders", on_delete=models.CASCADE, blank=True, null=True)
+    power = models.FloatField(verbose_name="Мощность", default=0)
 
     def __str__(self):
         return "Фильтр-Заказ №" + str(self.pk)

@@ -5,8 +5,9 @@ urlpatterns = [
     path('api/filters/', views.filters_list),
     path('api/filter/<int:id>/', views.one_filter),
     path('api/filter/create/', views.create_filter),
-    path('api/filter/update/<int:id>/', views.update_filter),
-    path('api/filter/delete/<int:id>/', views.delete_filter)
+    path('api/filter/<int:id>/update/', views.update_filter),
+    path('api/filter/<int:id>/delete/', views.delete_filter),
+    path('api/filter/<int:id>/add_to_order/', views.add_to_order)
 ]
 
 
