@@ -1,3 +1,4 @@
+from django.http import HttpResponse
 from django.utils.dateparse import parse_datetime
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -7,14 +8,14 @@ from .serializers import *
 
 @api_view(['GET'])
 def filters_list(request):                          # список неудаленных фильтров
-    input_text = request.GET.get('search-filter', '')
+    input_text = request.GET.get('search-filter')
     filters = Filters.objects.filter(name__icontains=input_text).filter(status=1) if input_text else Filters.objects.filter(status=1)
     order = Orders.objects.filter(status=1).first()
     serializer = FiltersSerializer(filters, many=True)
 
     res = {
         "filters": serializer.data,
-           "draft_order": order.id if order else None
+        "draft_order": order.id if order else None,
     }
 
     return Response(res)
@@ -26,6 +27,9 @@ def one_filter(request, id):                        # получение одн�
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     filter = Filters.objects.get(id=id)
+    if filter.status == 2:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
     serializer = FiltersSerializer(filter)
 
     return Response(serializer.data)
@@ -49,6 +53,9 @@ def update_filter(request, id):                     # обновление да�
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     filter = Filters.objects.get(id=id)
+    if filter.status == 2:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
     serializer = FiltersSerializer(filter, data=request.data, partial=True)
     if serializer.is_valid():
         serializer.save()
@@ -76,10 +83,12 @@ def add_to_order(request, id):                          # добавление �
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     filter = Filters.objects.get(id=id)
-    order = Orders.objects.filter(status=1).first()
+    user_id = 2              # Заглушка
+    user = Users.objects.get(id=user_id)
+    order = Orders.objects.filter(status=1).filter(owner=user).first()
 
     if order is None:
-        order = Orders.objects.create()
+        order = Orders.objects.create(owner=user)
 
     if FilterOrder.objects.filter(order=order, filter=filter):
         return Response(status=status.HTTP_409_CONFLICT)
@@ -89,20 +98,31 @@ def add_to_order(request, id):                          # добавление �
     new_filterorder.filter = filter
     new_filterorder.save()
 
-    serializer = OrdersSerializer(order)
+    order_serializer = OrdersSerializer(order)
+    about_order = order_serializer.data
 
-    return Response(serializer.data, status=status.HTTP_201_CREATED)
+    filters = []
+    filterorder = FilterOrder.objects.filter(order=order.id)
+    for i in filterorder:
+        filters.append(i.filter_id)
 
+    filters_list = Filters.objects.filter(id__in=filters)
+    filters_serializer = FiltersSerializer(filters_list, many=True)
+    about_order['Filters_in_Order'] = filters_serializer.data
 
+    return Response(about_order)
 
 @api_view(['GET'])
-def orders_list(request):                               # список заявок c фильтром по дате
+def orders_list(request):                               # список заявок c фильтром по дате и статусу
     orders = Orders.objects.exclude(status__in=[1, 5])
     date_start = request.GET.get("date_start")
     date_end = request.GET.get("date_end")
+    order_status = request.GET.get("status", 0)
+
+    if order_status != 0:
+        orders = orders.filter(status=order_status)
     if date_start:
         orders = orders.filter(date_formation__gte=parse_datetime(date_start))
-
     if date_end:
         orders = orders.filter(date_formation__lte=parse_datetime(date_end))
     serializers = OrdersSerializer(orders, many=True)
@@ -115,6 +135,10 @@ def one_order(request, id):                                 # заявка по 
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     order = Orders.objects.get(id=id)
+
+    if order.status == 5:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
     order_serializer = OrdersSerializer(order)
     about_order = order_serializer.data
 
@@ -130,7 +154,7 @@ def one_order(request, id):                                 # заявка по 
     return Response(about_order)
 
 @api_view(["PUT"])
-def update_order(request, id):
+def update_order(request, id):                                  # обновление заявки
     if not Orders.objects.filter(id=id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -175,6 +199,9 @@ def update_status_moderator(request, id):               # одобрение/о�
     if request_status not in [3, 4]:
         return Response(status=status.HTTP_403_FORBIDDEN)
 
+    moder_id = 1            # заглушка
+    moderator = Users.objects.get(id=moder_id)
+    order.moderator = moderator
     order.date_complete = timezone.now()
     order.status = request_status
     order.save()
@@ -226,7 +253,7 @@ def delete_filter_from_order(request, filter_id, order_id):                     
     return Response(about_order)
 
 @api_view(["PUT"])
-def update_order_filter(request, order_id, filter_id):
+def update_order_filter(request, order_id, filter_id):              # изменение мощности
     if not FilterOrder.objects.filter(filter_id=filter_id, order_id=order_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -244,6 +271,30 @@ def update_order_filter(request, order_id, filter_id):
         return Response(serializer.data)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(["GET"])
+def get_image(request, id):
+    if not Filters.objects.filter(id=id).exists():
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    filter = Filters.objects.get(id=id)
+
+    return HttpResponse(filter.image, content_type="image/png")
+
+@api_view(["PUT"])
+def update_image(request, id):
+    if not Filters.objects.filter(id=id).exists():
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    filter = Filters.objects.get(id=id)
+    serializer = FiltersSerializer(filter, data=request.data, partial=True)
+
+    if serializer.is_valid():
+        serializer.save()
+
+    return HttpResponse(filter.image, content_type="image/png")
+
+
 
 
 # from django.db import connection

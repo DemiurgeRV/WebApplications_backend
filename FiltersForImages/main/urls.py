@@ -16,7 +16,10 @@ urlpatterns = [
     path('api/order/<int:id>/update_status_moderator/', views.update_status_moderator),
     path('api/order/<int:id>/delete/', views.delete_order),
     path('api/order/<int:order_id>/delete_filter/<int:filter_id>/', views.delete_filter_from_order),
-    path('api/order/<int:order_id>/update_filter/<int:filter_id>/', views.update_order_filter)
+    path('api/order/<int:order_id>/update_filter/<int:filter_id>/', views.update_order_filter),
+
+    path('api/filter/<int:id>/image/', views.get_image),
+    path('api/filter/<int:id>/image/update/', views.update_image)
 ]
 
 

@@ -16,9 +16,6 @@ class Filters(models.Model):
     def __str__(self):
         return self.name
 
-    def get_image_url(self):
-        return f"http://127.0.0.1:9000/images/{self.image}"
-
     class Meta:
         verbose_name="Фильтр"
         verbose_name_plural="Фильтры"
