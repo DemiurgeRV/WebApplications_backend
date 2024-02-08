@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .serializers import *
+from drf_yasg.utils import swagger_auto_schema
 
 
 @api_view(['GET'])
@@ -34,6 +35,7 @@ def one_filter(request, id):                        # получение одн�
 
     return Response(serializer.data)
 
+@swagger_auto_schema(method='post', request_body=FiltersSerializer)
 @api_view(['POST'])
 def create_filter(request):                         # создание фильтра
     serializer = FiltersSerializer(data=request.data)
@@ -47,6 +49,7 @@ def create_filter(request):                         # создание филь�
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@swagger_auto_schema(method='put', request_body=FiltersSerializer)
 @api_view(['PUT'])
 def update_filter(request, id):                     # обновление данных о фильтре
     if not Filters.objects.filter(id=id).exists():
@@ -77,6 +80,7 @@ def delete_filter(request, id):                         # удаление фи�
 
     return Response(serializer.data)
 
+@swagger_auto_schema(method='post', request_body=OrdersSerializer)
 @api_view(['POST'])
 def add_to_order(request, id):                          # добавление фильтра в заявку
     if not Filters.objects.filter(id=id).exists():
@@ -153,6 +157,7 @@ def one_order(request, id):                                 # заявка по 
 
     return Response(about_order)
 
+@swagger_auto_schema(method='put', request_body=OrdersSerializer)
 @api_view(["PUT"])
 def update_order(request, id):                                  # обновление заявки
     if not Orders.objects.filter(id=id).exists():
@@ -166,6 +171,7 @@ def update_order(request, id):                                  # обновле
         return Response(serializer.data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@swagger_auto_schema(method='put', request_body=OrdersSerializer)
 @api_view(["PUT"])
 def update_status_owner(request, id):                           # формирование заявки
     if not Orders.objects.filter(id=id).exists():
@@ -184,6 +190,7 @@ def update_status_owner(request, id):                           # формиро
 
     return Response(serializer.data)
 
+@swagger_auto_schema(method='put', request_body=OrdersSerializer)
 @api_view(["PUT"])
 def update_status_moderator(request, id):               # одобрение/отказ заявки
     if not Orders.objects.filter(id=id).exists():
@@ -252,6 +259,7 @@ def delete_filter_from_order(request, filter_id, order_id):                     
 
     return Response(about_order)
 
+@swagger_auto_schema(method='put', request_body=FilterOrderSerializer)
 @api_view(["PUT"])
 def update_order_filter(request, order_id, filter_id):              # изменение мощности
     if not FilterOrder.objects.filter(filter_id=filter_id, order_id=order_id).exists():
@@ -281,6 +289,7 @@ def get_image(request, id):
 
     return HttpResponse(filter.image, content_type="image/png")
 
+@swagger_auto_schema(method='put', request_body=FiltersSerializer)
 @api_view(["PUT"])
 def update_image(request, id):
     if not Filters.objects.filter(id=id).exists():
@@ -293,31 +302,3 @@ def update_image(request, id):
         serializer.save()
 
     return HttpResponse(filter.image, content_type="image/png")
-
-
-
-
-# from django.db import connection
-# from django.shortcuts import render, redirect
-#
-#
-# from .models import *
-#
-# def getFilters(request):
-#     input_text = request.GET.get('search-filter')
-#     filters = Filters.objects.filter(name__icontains=input_text).filter(status=1) if input_text else Filters.objects.filter(status=1)
-#
-#     return render(request, 'main/AllFilters.html', { 'data' : { 'filters' : filters,
-#                                                                 'input' : input_text if input_text else ''
-#                                                                     }
-#                                                          })
-#
-# def getFilter(request, id):
-#     filter = Filters.objects.filter(id=id)
-#     return render(request, 'main/OneFilter.html', {'filter': filter[0]})
-#
-# def delete_filter(request, id):
-#     filter = Filters.objects.get(id=id)
-#     with connection.cursor() as cursor:
-#         cursor.execute("UPDATE main_filters SET status = 2 WHERE id = %s", [filter.pk])
-#     return redirect('/home')

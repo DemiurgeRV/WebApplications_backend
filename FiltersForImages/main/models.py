@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 
+
 class Filters(models.Model):
     STATUS_CHOICES = [
         (1, 'Действует'),
