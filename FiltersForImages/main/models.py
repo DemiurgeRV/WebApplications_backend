@@ -1,3 +1,5 @@
+from django.contrib.auth.base_user import AbstractBaseUser
+from django.contrib.auth.models import PermissionsMixin, UserManager
 from django.db import models
 from django.utils import timezone
 
@@ -44,20 +46,6 @@ class Orders(models.Model):
         verbose_name = "Заказ"
         verbose_name_plural = "Заказы"
 
-class Users(models.Model):
-    first_name = models.CharField(max_length=50, verbose_name="Имя")
-    last_name = models.CharField(max_length=50, verbose_name="Фамилия")
-    login = models.CharField(max_length=50, verbose_name="Логин")
-    password = models.CharField(max_length=50, verbose_name="Пароль")
-    email = models.CharField(max_length=50, verbose_name="Почта")
-    role = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.login
-
-    class Meta:
-        verbose_name = "Пользователь"
-        verbose_name_plural = "Пользователи"
 
 class FilterOrder(models.Model):
     filter = models.ForeignKey("Filters", on_delete=models.CASCADE, blank=True, null=True)
@@ -66,3 +54,30 @@ class FilterOrder(models.Model):
 
     def __str__(self):
         return "Фильтр-Заказ №" + str(self.pk)
+
+class Users(AbstractBaseUser, PermissionsMixin):
+    first_name = models.CharField(max_length=50, verbose_name="Имя")
+    last_name = models.CharField(max_length=50, verbose_name="Фамилия")
+    login = models.CharField(max_length=50, verbose_name="Логин", unique=True)
+    email = models.EmailField(max_length=50, verbose_name="Почта")
+    role = models.BooleanField(default=False)
+
+    USERNAME_FIELD = 'login'
+
+    def __str__(self):
+        return self.login
+
+    class Meta:
+        verbose_name = "Пользователь"
+        verbose_name_plural = "Пользователи"
+
+
+class NewUserManager(UserManager):
+    def create_user(self, login, password=None, **extra_fields):
+        if not login:
+            raise ValueError('User must have a login')
+
+        user = self.model(login=login, **extra_fields)
+        user.set_password(password)
+        user.save(using=self.db)
+        return user
