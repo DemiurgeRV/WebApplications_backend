@@ -55,23 +55,6 @@ class FilterOrder(models.Model):
     def __str__(self):
         return "Фильтр-Заказ №" + str(self.pk)
 
-class Users(AbstractBaseUser, PermissionsMixin):
-    first_name = models.CharField(max_length=50, verbose_name="Имя")
-    last_name = models.CharField(max_length=50, verbose_name="Фамилия")
-    login = models.CharField(max_length=50, verbose_name="Логин", unique=True)
-    email = models.EmailField(max_length=50, verbose_name="Почта")
-    role = models.BooleanField(default=False)
-
-    USERNAME_FIELD = 'login'
-
-    def __str__(self):
-        return self.login
-
-    class Meta:
-        verbose_name = "Пользователь"
-        verbose_name_plural = "Пользователи"
-
-
 class NewUserManager(UserManager):
     def create_user(self, login, password=None, **extra_fields):
         if not login:
@@ -81,3 +64,23 @@ class NewUserManager(UserManager):
         user.set_password(password)
         user.save(using=self.db)
         return user
+
+class Users(AbstractBaseUser, PermissionsMixin):
+    first_name = models.CharField(max_length=50, verbose_name="Имя")
+    last_name = models.CharField(max_length=50, verbose_name="Фамилия")
+    login = models.CharField(max_length=50, verbose_name="Логин", unique=True)
+    email = models.EmailField(max_length=50, verbose_name="Почта")
+    role = models.BooleanField(default=False, verbose_name="Модератор?")
+    last_login = models.DateTimeField(auto_now=True, blank=True, null=True, verbose_name="Последняя дата входа")
+    is_superuser = models.BooleanField(default=False, verbose_name="Админ?")
+
+    USERNAME_FIELD = 'login'
+
+    objects = NewUserManager()
+
+    def __str__(self):
+        return self.login
+
+    class Meta:
+        verbose_name = "Пользователь"
+        verbose_name_plural = "Пользователи"

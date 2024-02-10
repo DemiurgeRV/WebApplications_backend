@@ -1,8 +1,10 @@
+from rest_framework.routers import DefaultRouter
 from . import views
 from rest_framework import permissions
 from django.urls import path, include
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+
 
 schema_view = get_schema_view(
    openapi.Info(
@@ -17,8 +19,16 @@ schema_view = get_schema_view(
    permission_classes=(permissions.AllowAny,),
 )
 
+router = DefaultRouter()
+router.register(r'user', views.UserViewSet, basename='user')
+
 urlpatterns = [
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('api/', include(router.urls)),
+    path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    path('login/',  views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
+
     path('api/filters/', views.filters_list),
     path('api/filters/<int:id>/', views.one_filter),
     path('api/filters/create/', views.create_filter),
@@ -28,7 +38,6 @@ urlpatterns = [
 
     path('api/orders/', views.orders_list),
     path('api/orders/<int:id>/', views.one_order),
-    path('api/orders/<int:id>/update/', views.update_order),
     path('api/orders/<int:id>/update_status_owner/', views.update_status_owner),
     path('api/orders/<int:id>/update_status_moderator/', views.update_status_moderator),
     path('api/orders/<int:id>/delete/', views.delete_order),

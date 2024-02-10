@@ -28,13 +28,21 @@ class FilterOrderSerializer(serializers.ModelSerializer):
             return new_fields
 
 class UsersSerializer(serializers.ModelSerializer):
+    role = serializers.BooleanField(default=False, required=False)
+    is_superuser = serializers.BooleanField(default=False, required=False)
+    password = serializers.CharField()
+    class Meta:
+        model = Users
+        fields = "__all__"
+
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Users
         fields = ('login', 'email', 'id')
 
 class OrdersSerializer(serializers.ModelSerializer):
-    owner = UsersSerializer(read_only=True)
-    moderator = UsersSerializer(read_only=True)
+    owner = UserSerializer(read_only=True)
+    moderator = UserSerializer(read_only=True)
     class Meta:
         model = Orders
         fields = "__all__"
