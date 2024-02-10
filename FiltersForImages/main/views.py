@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.http import HttpResponse
 from django.utils.dateparse import parse_datetime
 from rest_framework import status, viewsets
@@ -6,9 +7,9 @@ from rest_framework.response import Response
 from .serializers import *
 from drf_yasg.utils import swagger_auto_schema
 from django.contrib.auth import authenticate, login, logout
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.views.decorators.csrf import csrf_exempt
-from .permissions import IsModerator, IsUser, IsAuth, IsAnon
+from .permissions import IsModerator, IsUser
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -18,7 +19,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action in ['create']:
-            permission_classes = [IsAnon]
+            permission_classes = [AllowAny]
         else:
             permission_classes = [IsModerator]
         return [permission() for permission in permission_classes]
@@ -48,11 +49,11 @@ def method_permission_classes(classes):
         return decorated_func
     return decorator
 
-@permission_classes([IsAnon])
 @authentication_classes([])
 @csrf_exempt
 @swagger_auto_schema(method='post', request_body=UsersSerializer)
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def login_view(request):
     login_value = request.data["login"]
     password = request.data["password"]
@@ -63,17 +64,21 @@ def login_view(request):
     else:
         return HttpResponse("{'status': 'error', 'error': 'login failed'}")
 
-@permission_classes([IsAuth])
+@permission_classes([IsAuthenticated])
 def logout_view(request):
     logout(request._request)
     return Response({'status': 'Success'})
 
-@permission_classes([AllowAny])
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def filters_list(request):                          # список неудаленных фильтров
     input_text = request.GET.get('search-filter')
     filters = Filters.objects.filter(name__icontains=input_text).filter(status=1) if input_text else Filters.objects.filter(status=1)
-    order = Orders.objects.filter(status=1).first()
+    if request.user.is_authenticated:
+        order = Orders.objects.filter(Q(status=1) & Q(owner=request.user)).first()
+    else:
+        order = False
+
     serializer = FiltersSerializer(filters, many=True)
 
     res = {
@@ -83,8 +88,8 @@ def filters_list(request):                          # список неудал�
 
     return Response(res)
 
-@permission_classes([AllowAny])
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def one_filter(request, id):                        # получение одного фильтра по id
     if not Filters.objects.filter(id=id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -97,9 +102,9 @@ def one_filter(request, id):                        # получение одн�
 
     return Response(serializer.data)
 
-@permission_classes([IsModerator])
 @swagger_auto_schema(method='post', request_body=FiltersSerializer)
 @api_view(['POST'])
+@permission_classes([IsModerator])
 def create_filter(request):                         # создание фильтра
     serializer = FiltersSerializer(data=request.data)
 
@@ -111,9 +116,9 @@ def create_filter(request):                         # создание филь�
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@permission_classes([IsModerator])
 @swagger_auto_schema(method='put', request_body=FiltersSerializer)
 @api_view(['PUT'])
+@permission_classes([IsModerator])
 def update_filter(request, id):                     # обновление данных о фильтре
     if not Filters.objects.filter(id=id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -129,8 +134,8 @@ def update_filter(request, id):                     # обновление да�
         return Response(serializer.data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@permission_classes([IsModerator])
 @api_view(['DELETE'])
+@permission_classes([IsModerator])
 def delete_filter(request, id):                         # удаление фильтра
     if not Filters.objects.filter(id=id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -144,16 +149,16 @@ def delete_filter(request, id):                         # удаление фи�
 
     return Response(serializer.data)
 
-@permission_classes([IsUser])
 @swagger_auto_schema(method='post', request_body=OrdersSerializer)
 @api_view(['POST'])
+@permission_classes([IsUser])
 def add_to_order(request, id):                          # добавление фильтра в заявку
     if not Filters.objects.filter(id=id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     filter = Filters.objects.get(id=id)
-    user_id = 2              # Заглушка
-    user = Users.objects.get(id=user_id)
+    user_name = request.user
+    user = Users.objects.get(login=user_name)
     order = Orders.objects.filter(status=1).filter(owner=user).first()
 
     if order is None:
@@ -181,8 +186,8 @@ def add_to_order(request, id):                          # добавление �
 
     return Response(about_order)
 
-@permission_classes([IsAuth])
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def orders_list(request):                               # список заявок c фильтром по дате и статусу
     orders = Orders.objects.exclude(status__in=[1, 5])
     date_start = request.GET.get("date_start")
@@ -195,17 +200,27 @@ def orders_list(request):                               # список заяв�
         orders = orders.filter(date_formation__gte=parse_datetime(date_start))
     if date_end:
         orders = orders.filter(date_formation__lte=parse_datetime(date_end))
+
+    if request.user.role == False:
+        orders = orders.filter(owner=request.user)
     serializers = OrdersSerializer(orders, many=True)
 
     return Response(serializers.data)
 
-@permission_classes([IsAuth])
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def one_order(request, id):                                 # заявка по id + ее услуги
     if not Orders.objects.filter(id=id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     order = Orders.objects.get(id=id)
+
+    if request.user.role == False:
+        if order.owner != request.user:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+    else:
+        if order.status == 1:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
     if order.status == 5:
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -224,9 +239,9 @@ def one_order(request, id):                                 # заявка по 
 
     return Response(about_order)
 
-@permission_classes([IsUser])
 @swagger_auto_schema(method='put', request_body=OrdersSerializer)
 @api_view(["PUT"])
+@permission_classes([IsUser])
 def update_status_owner(request, id):                           # формирование заявки
     if not Orders.objects.filter(id=id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -236,6 +251,9 @@ def update_status_owner(request, id):                           # формиро
     if order.status != 1:
         return Response(status=status.HTTP_409_CONFLICT)
 
+    if order.owner != request.user:
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
     order.status = 2
     order.date_formation = timezone.now()
     order.save()
@@ -244,9 +262,9 @@ def update_status_owner(request, id):                           # формиро
 
     return Response(serializer.data)
 
-@permission_classes([IsModerator])
 @swagger_auto_schema(method='put', request_body=OrdersSerializer)
 @api_view(["PUT"])
+@permission_classes([IsModerator])
 def update_status_moderator(request, id):               # одобрение/отказ заявки
     if not Orders.objects.filter(id=id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -261,8 +279,8 @@ def update_status_moderator(request, id):               # одобрение/о�
     if request_status not in [3, 4]:
         return Response(status=status.HTTP_403_FORBIDDEN)
 
-    moder_id = 1            # заглушка
-    moderator = Users.objects.get(id=moder_id)
+    moder_name = request.user
+    moderator = Users.objects.get(login=moder_name)
     order.moderator = moderator
     order.date_complete = timezone.now()
     order.status = request_status
@@ -272,8 +290,8 @@ def update_status_moderator(request, id):               # одобрение/о�
 
     return Response(serializer.data)
 
-@permission_classes([IsUser])
 @api_view(["DELETE"])
+@permission_classes([IsUser])
 def delete_order(request, id):                          # удаление черновой заявки
     if not Orders.objects.filter(id=id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -283,18 +301,24 @@ def delete_order(request, id):                          # удаление че�
     if order.status != 1:
         return Response(status=status.HTTP_403_FORBIDDEN)
 
+    if order.owner != request.user:
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
     order.status = 5
     order.save()
 
     return Response(status=status.HTTP_200_OK)
 
-@permission_classes([IsUser])
 @api_view(["DELETE"])
+@permission_classes([IsUser])
 def delete_filter_from_order(request, filter_id, order_id):                     # удаление фильтра из черновой заявки
     if not FilterOrder.objects.filter(filter_id=filter_id, order_id=order_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     order = Orders.objects.get(id=order_id)
+
+    if order.owner != request.user:
+        return Response(status=status.HTTP_403_FORBIDDEN)
 
     if order.status != 1:
         return Response(status=status.HTTP_403_FORBIDDEN)
@@ -316,14 +340,17 @@ def delete_filter_from_order(request, filter_id, order_id):                     
 
     return Response(about_order)
 
-@permission_classes([IsUser])
 @swagger_auto_schema(method='put', request_body=FilterOrderSerializer)
 @api_view(["PUT"])
+@permission_classes([IsUser])
 def update_order_filter(request, order_id, filter_id):              # изменение мощности
     if not FilterOrder.objects.filter(filter_id=filter_id, order_id=order_id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     order = Orders.objects.get(id=order_id)
+
+    if order.owner != request.user:
+        return Response(status=status.HTTP_403_FORBIDDEN)
 
     if order.status != 1:
         return Response(status=status.HTTP_403_FORBIDDEN)
@@ -338,8 +365,8 @@ def update_order_filter(request, order_id, filter_id):              # измен
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@permission_classes([AllowAny])
 @api_view(["GET"])
+@permission_classes([AllowAny])
 def get_image(request, id):
     if not Filters.objects.filter(id=id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
@@ -348,9 +375,9 @@ def get_image(request, id):
 
     return HttpResponse(filter.image, content_type="image/png")
 
-@permission_classes([IsModerator])
 @swagger_auto_schema(method='put', request_body=FiltersSerializer)
 @api_view(["PUT"])
+@permission_classes([IsModerator])
 def update_image(request, id):
     if not Filters.objects.filter(id=id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)

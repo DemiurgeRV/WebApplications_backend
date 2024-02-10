@@ -2,7 +2,9 @@ from rest_framework import permissions
 
 class IsModerator(permissions.BasePermission):
     def has_permission(self, request, view):
-        return bool(request.user and request.user.role)
+        if request.user.is_authenticated:
+            return request.user.role
+        return False
 
 # class IsAdmin(permissions.BasePermission):
 #     def has_permission(self, request, view):
@@ -10,15 +12,13 @@ class IsModerator(permissions.BasePermission):
 
 class IsUser(permissions.BasePermission):
     def has_permission(self, request, view):
-        if request.user:
+        if request.user.is_authenticated:
             if not(request.user.role or request.user.is_superuser):
                 return True
         return False
 
-class IsAuth(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return bool(request.user)
-
-class IsAnon(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return bool(not(request.user))
+# class IsAnon(permissions.BasePermission):
+#     def has_permission(self, request, view):
+#         if request.user.is_authenticated:
+#             return False
+#         return True
