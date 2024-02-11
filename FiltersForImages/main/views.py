@@ -548,7 +548,7 @@ def get_image(request, id):
     return HttpResponse(filter.image, content_type="image/png")
 
 @swagger_auto_schema(
-    method='GET',
+    method='PUT',
     operation_summary="Изменение изображения",
     operation_description="Доступно только модератору",
     responses={
