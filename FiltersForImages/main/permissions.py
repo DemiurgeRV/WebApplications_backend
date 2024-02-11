@@ -1,4 +1,8 @@
 from rest_framework import permissions
+import redis
+from django.conf import settings
+
+session_storage = redis.StrictRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
 
 class IsModerator(permissions.BasePermission):
     def has_permission(self, request, view):

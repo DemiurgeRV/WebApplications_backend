@@ -1,3 +1,4 @@
+import uuid
 from django.db.models import Q
 from django.http import HttpResponse
 from django.utils.dateparse import parse_datetime
@@ -6,11 +7,9 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.response import Response
 from .serializers import *
 from drf_yasg.utils import swagger_auto_schema
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, logout
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from django.views.decorators.csrf import csrf_exempt
-from .permissions import IsModerator, IsUser
-
+from .permissions import *
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = Users.objects.all()
@@ -50,7 +49,6 @@ def method_permission_classes(classes):
     return decorator
 
 @authentication_classes([])
-@csrf_exempt
 @swagger_auto_schema(method='post', request_body=UsersSerializer)
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -59,8 +57,11 @@ def login_view(request):
     password = request.data["password"]
     user = authenticate(request, login=login_value, password=password)
     if user is not None:
-        login(request, user)
-        return HttpResponse("{'status': 'ok'}")
+        random_key = str(uuid.uuid4())
+        session_storage.set(random_key, login_value)
+        response = HttpResponse("{'status': 'ok'}")
+        response.set_cookie("session_id", random_key)
+        return response
     else:
         return HttpResponse("{'status': 'error', 'error': 'login failed'}")
 
@@ -74,8 +75,12 @@ def logout_view(request):
 def filters_list(request):                          # список неудаленных фильтров
     input_text = request.GET.get('search-filter')
     filters = Filters.objects.filter(name__icontains=input_text).filter(status=1) if input_text else Filters.objects.filter(status=1)
-    if request.user.is_authenticated:
-        order = Orders.objects.filter(Q(status=1) & Q(owner=request.user)).first()
+    ssid = request.COOKIES.get("session_id", None)
+    print(ssid)
+    if ssid is not None:
+        user_name = session_storage.get(ssid).decode('utf-8')
+        user_object = Users.objects.get(login=user_name)
+        order = Orders.objects.filter(Q(status=1) & Q(owner=user_object)).first()
     else:
         order = False
 

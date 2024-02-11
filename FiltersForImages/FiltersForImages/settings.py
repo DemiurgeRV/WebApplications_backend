@@ -143,6 +143,9 @@ STATICFILES_DIRS = [
    os.path.join(BASE_DIR, "static"),
 ]
 
+REDIS_HOST = '127.0.0.1'
+REDIS_PORT = 6379
+
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 AWS_STORAGE_BUCKET_NAME = 'images'
 AWS_ACCESS_KEY_ID = 'greiXPPvPD4P52Sr2Xny'
