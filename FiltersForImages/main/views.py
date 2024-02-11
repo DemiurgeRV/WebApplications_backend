@@ -56,6 +56,9 @@ def login_view(request):
     login_value = request.data["login"]
     password = request.data["password"]
     user = authenticate(request, login=login_value, password=password)
+    ssid = request.COOKIES.get("session_id", None)
+    if ssid is not None:
+        return HttpResponse("{'status': 'error', 'error': 'login failed'}")
     if user is not None:
         random_key = str(uuid.uuid4())
         session_storage.set(random_key, login_value)
@@ -161,8 +164,9 @@ def add_to_order(request, id):                          # добавление �
     if not Filters.objects.filter(id=id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
 
+    ssid = request.COOKIES.get("session_id", None)
     filter = Filters.objects.get(id=id)
-    user_name = request.user
+    user_name = session_storage.get(ssid).decode('utf-8')
     user = Users.objects.get(login=user_name)
     order = Orders.objects.filter(status=1).filter(owner=user).first()
 
@@ -192,7 +196,7 @@ def add_to_order(request, id):                          # добавление �
     return Response(about_order)
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuth])
 def orders_list(request):                               # список заявок c фильтром по дате и статусу
     orders = Orders.objects.exclude(status__in=[1, 5])
     date_start = request.GET.get("date_start")
@@ -206,22 +210,30 @@ def orders_list(request):                               # список заяв�
     if date_end:
         orders = orders.filter(date_formation__lte=parse_datetime(date_end))
 
-    if request.user.role == False:
-        orders = orders.filter(owner=request.user)
+    ssid = request.COOKIES.get("session_id", None)
+    user_name = session_storage.get(ssid).decode('utf-8')
+    user_object = Users.objects.get(login=user_name)
+
+    if user_object.role == False:
+        orders = orders.filter(owner=user_object)
     serializers = OrdersSerializer(orders, many=True)
 
     return Response(serializers.data)
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuth])
 def one_order(request, id):                                 # заявка по id + ее услуги
     if not Orders.objects.filter(id=id).exists():
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     order = Orders.objects.get(id=id)
 
-    if request.user.role == False:
-        if order.owner != request.user:
+    ssid = request.COOKIES.get("session_id", None)
+    user_name = session_storage.get(ssid).decode('utf-8')
+    user_object = Users.objects.get(login=user_name)
+
+    if user_object.role == False:
+        if order.owner != user_object:
             return Response(status=status.HTTP_404_NOT_FOUND)
     else:
         if order.status == 1:
@@ -256,7 +268,11 @@ def update_status_owner(request, id):                           # формиро
     if order.status != 1:
         return Response(status=status.HTTP_409_CONFLICT)
 
-    if order.owner != request.user:
+    ssid = request.COOKIES.get("session_id", None)
+    user_name = session_storage.get(ssid).decode('utf-8')
+    user_object = Users.objects.get(login=user_name)
+
+    if order.owner != user_object:
         return Response(status=status.HTTP_403_FORBIDDEN)
 
     order.status = 2
@@ -284,7 +300,8 @@ def update_status_moderator(request, id):               # одобрение/о�
     if request_status not in [3, 4]:
         return Response(status=status.HTTP_403_FORBIDDEN)
 
-    moder_name = request.user
+    ssid = request.COOKIES.get("session_id", None)
+    moder_name = session_storage.get(ssid).decode('utf-8')
     moderator = Users.objects.get(login=moder_name)
     order.moderator = moderator
     order.date_complete = timezone.now()
@@ -306,7 +323,11 @@ def delete_order(request, id):                          # удаление че�
     if order.status != 1:
         return Response(status=status.HTTP_403_FORBIDDEN)
 
-    if order.owner != request.user:
+    ssid = request.COOKIES.get("session_id", None)
+    user_name = session_storage.get(ssid).decode('utf-8')
+    user_object = Users.objects.get(login=user_name)
+
+    if order.owner != user_object:
         return Response(status=status.HTTP_403_FORBIDDEN)
 
     order.status = 5
@@ -322,7 +343,11 @@ def delete_filter_from_order(request, filter_id, order_id):                     
 
     order = Orders.objects.get(id=order_id)
 
-    if order.owner != request.user:
+    ssid = request.COOKIES.get("session_id", None)
+    user_name = session_storage.get(ssid).decode('utf-8')
+    user_object = Users.objects.get(login=user_name)
+
+    if order.owner != user_object:
         return Response(status=status.HTTP_403_FORBIDDEN)
 
     if order.status != 1:
@@ -354,7 +379,11 @@ def update_order_filter(request, order_id, filter_id):              # измен
 
     order = Orders.objects.get(id=order_id)
 
-    if order.owner != request.user:
+    ssid = request.COOKIES.get("session_id", None)
+    user_name = session_storage.get(ssid).decode('utf-8')
+    user_object = Users.objects.get(login=user_name)
+
+    if order.owner != user_object:
         return Response(status=status.HTTP_403_FORBIDDEN)
 
     if order.status != 1:
