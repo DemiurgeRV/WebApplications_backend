@@ -73,20 +73,33 @@ def login_view(request):
     else:
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
+@swagger_auto_schema(
+    method='POST',
+    operation_summary="Выход из системы",
+    operation_description="Удаления данных из Redis и Cookie",
+    responses={
+        200: 'Сеанс Завершен',
+        400: 'Bad Request'
+    })
 @api_view(['POST'])
 @permission_classes([IsAuth])
 def logout_view(request):
     ssid = request.COOKIES.get("session_id")
-    print(ssid)
     if ssid is not None:
         if session_storage.exists(ssid):
             session_storage.delete(ssid)
-            print(session_storage.keys('*'))
             response = Response({'detail': 'Сеанс завершен'}, status=status.HTTP_200_OK)
             response.delete_cookie("session_id")
             return response
     return Response({'detail': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
 
+@swagger_auto_schema(
+    method='GET',
+    operation_summary="Фильтры",
+    operation_description="Список неудаленных фильтров по поиску. Также выводится id черновой заявки, если пользователь авторизован. Доступно всем посетителям сайта",
+    responses={
+        200: 'Успех'
+    })
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def filters_list(request):                          # список неудаленных фильтров
@@ -108,8 +121,16 @@ def filters_list(request):                          # список неудал�
         "draft_order": order.id if order else None,
     }
 
-    return Response(res)
+    return Response(res, status=status.HTTP_200_OK)
 
+@swagger_auto_schema(
+    method='GET',
+    operation_summary="Фильтр по id",
+    operation_description="Выбранный фильтр. Доступно всем посетителям сайта",
+    responses={
+        200: 'Успех',
+        404: 'Фильтр не найден'
+    })
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def one_filter(request, id):                        # получение одного фильтра по id
@@ -122,7 +143,7 @@ def one_filter(request, id):                        # получение одн�
 
     serializer = FiltersSerializer(filter)
 
-    return Response(serializer.data)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 @swagger_auto_schema(
     request_body=FiltersSerializer,
@@ -174,7 +195,6 @@ def update_filter(request, id):                     # обновление да�
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @swagger_auto_schema(
-    request_body=FiltersSerializer,
     method='DELETE',
     operation_summary="Удаление фильтра",
     operation_description="Доступно только модератору",
@@ -197,7 +217,15 @@ def delete_filter(request, id):                         # удаление фи�
 
     return Response(serializer.data, status=status.HTTP_200_OK)
 
-@swagger_auto_schema(method='post', request_body=OrdersSerializer)
+@swagger_auto_schema(
+    method='POST',
+    operation_summary="Добавление фильтра в заявку",
+    operation_description="Доступно только обычному пользователю",
+    responses={
+        200: 'Успех',
+        404: 'Фильтр не найден',
+        409: 'Конфликт'
+    })
 @api_view(['POST'])
 @permission_classes([IsUser])
 def add_to_order(request, id):                          # добавление фильтра в заявку
@@ -233,8 +261,15 @@ def add_to_order(request, id):                          # добавление �
     filters_serializer = FiltersSerializer(filters_list, many=True)
     about_order['Filters_in_Order'] = filters_serializer.data
 
-    return Response(about_order)
+    return Response(about_order, status=status.HTTP_200_OK)
 
+@swagger_auto_schema(
+    method='GET',
+    operation_summary="Список заявок",
+    operation_description="Получение всех заявок, кроме удаленный и черновых. Фильтрация по статусу и дате создания. Доступно только авторизованным пользователям",
+    responses={
+        200: 'Успех'
+    })
 @api_view(['GET'])
 @permission_classes([IsAuth])
 def orders_list(request):                               # список заявок c фильтром по дате и статусу
@@ -258,8 +293,16 @@ def orders_list(request):                               # список заяв�
         orders = orders.filter(owner=user_object)
     serializers = OrdersSerializer(orders, many=True)
 
-    return Response(serializers.data)
+    return Response(serializers.data, status=status.HTTP_200_OK)
 
+@swagger_auto_schema(
+    method='GET',
+    operation_summary="Заявка по id",
+    operation_description="Получение выбранной заявки. Доступно только авторизованным пользователям. Обычный пользователь получает все срзданные им заявки, модератор все существующие заявки, кроме черновика",
+    responses={
+        200: 'Успех',
+        404: 'Заявка не найдена'
+    })
 @api_view(['GET'])
 @permission_classes([IsAuth])
 def one_order(request, id):                                 # заявка по id + ее услуги
@@ -296,7 +339,16 @@ def one_order(request, id):                                 # заявка по 
 
     return Response(about_order)
 
-@swagger_auto_schema(method='put', request_body=OrdersSerializer)
+@swagger_auto_schema(
+    method='PUT',
+    operation_summary="Формирование заявки",
+    operation_description="Сформировать можно только черновую заявку. Доступно только обычному пользователю",
+    responses={
+        200: 'Успех',
+        403: 'Ошибка доступа',
+        404: 'Фильтр не найден',
+        409: 'Конфликт'
+    })
 @api_view(["PUT"])
 @permission_classes([IsUser])
 def update_status_owner(request, id):                           # формирование заявки
@@ -321,9 +373,19 @@ def update_status_owner(request, id):                           # формиро
 
     serializer = OrdersSerializer(order)
 
-    return Response(serializer.data)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
-@swagger_auto_schema(method='put', request_body=OrdersSerializer)
+@swagger_auto_schema(
+    request_body=OrdersSerializer,
+    method='PUT',
+    operation_summary="Одобрение/отказ заявки",
+    operation_description="Выполнить можно только для сформированой заявки. Доступно только модератору",
+    responses={
+        200: 'Успех',
+        403: 'Ошибка доступа',
+        404: 'Фильтр не найден',
+        409: 'Конфликт'
+    })
 @api_view(["PUT"])
 @permission_classes([IsModerator])
 def update_status_moderator(request, id):               # одобрение/отказ заявки
@@ -350,8 +412,17 @@ def update_status_moderator(request, id):               # одобрение/о�
 
     serializer = OrdersSerializer(order)
 
-    return Response(serializer.data)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
+@swagger_auto_schema(
+    method='DELETE',
+    operation_summary="Удаление заявки",
+    operation_description="Выполнить можно только для черновой заявки. Доступно только обычному пользователю и только ее владельцу",
+    responses={
+        200: 'Успех',
+        403: 'Ошибка доступа',
+        404: 'Заявка не найдена'
+    })
 @api_view(["DELETE"])
 @permission_classes([IsUser])
 def delete_order(request, id):                          # удаление черновой заявки
@@ -375,6 +446,15 @@ def delete_order(request, id):                          # удаление че�
 
     return Response(status=status.HTTP_200_OK)
 
+@swagger_auto_schema(
+    method='DELETE',
+    operation_summary="Удаление заявки",
+    operation_description="Выполнить можно только для черновой заявки. Доступно только обычному пользователю",
+    responses={
+        200: 'Успех',
+        403: 'Ошибка доступа',
+        404: 'Заявка не найдена'
+    })
 @api_view(["DELETE"])
 @permission_classes([IsUser])
 def delete_filter_from_order(request, filter_id, order_id):                     # удаление фильтра из черновой заявки
@@ -408,9 +488,19 @@ def delete_filter_from_order(request, filter_id, order_id):                     
     filters_serializer = FiltersSerializer(filters_list, many=True)
     about_order['Filters_in_Order'] = filters_serializer.data
 
-    return Response(about_order)
+    return Response(about_order, status=status.HTTP_200_OK)
 
-@swagger_auto_schema(method='put', request_body=FilterOrderSerializer)
+@swagger_auto_schema(
+    request_body=FilterOrderSerializer,
+    method='PUT',
+    operation_summary="Изменение мощности",
+    operation_description="Выполнить можно только для черновой заявки. Доступно только обычному пользователю и ее создателю",
+    responses={
+        200: 'Успех',
+        400: 'Неверные данные',
+        403: 'Ошибка доступа',
+        404: 'Заявка не найдена'
+    })
 @api_view(["PUT"])
 @permission_classes([IsUser])
 def update_order_filter(request, order_id, filter_id):              # изменение мощности
@@ -439,6 +529,14 @@ def update_order_filter(request, order_id, filter_id):              # измен
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@swagger_auto_schema(
+    method='GET',
+    operation_summary="Изображение фильтра",
+    operation_description="Доступно всем пользователям",
+    responses={
+        200: 'Успех',
+        404: 'Фильтр не найден'
+    })
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def get_image(request, id):
@@ -449,7 +547,14 @@ def get_image(request, id):
 
     return HttpResponse(filter.image, content_type="image/png")
 
-@swagger_auto_schema(method='put', request_body=FiltersSerializer)
+@swagger_auto_schema(
+    method='GET',
+    operation_summary="Изменение изображения",
+    operation_description="Доступно только модератору",
+    responses={
+        200: 'Успех',
+        404: 'Фильтр не найден'
+    })
 @api_view(["PUT"])
 @permission_classes([IsModerator])
 def update_image(request, id):
