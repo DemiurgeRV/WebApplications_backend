@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from .serializers import *
 from drf_yasg.utils import swagger_auto_schema
 from django.contrib.auth import authenticate, logout
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny
 from .permissions import *
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -48,30 +48,44 @@ def method_permission_classes(classes):
         return decorated_func
     return decorator
 
+@swagger_auto_schema(
+    request_body=UsersSerializer,
+    method='POST',
+    operation_summary="Регистрация пользователя в системе",
+    operation_description="Сервер отправляет сессию пользователя в виде cookies",
+    responses={
+        200: 'Успешная регистрация',
+        400: 'Неверный логин или пароль'
+    })
 @authentication_classes([])
-@swagger_auto_schema(method='post', request_body=UsersSerializer)
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAnon])
 def login_view(request):
     login_value = request.data["login"]
     password = request.data["password"]
     user = authenticate(request, login=login_value, password=password)
-    ssid = request.COOKIES.get("session_id", None)
-    if ssid is not None:
-        return HttpResponse("{'status': 'error', 'error': 'login failed'}")
     if user is not None:
         random_key = str(uuid.uuid4())
         session_storage.set(random_key, login_value)
-        response = HttpResponse("{'status': 'ok'}")
+        response = Response(status=status.HTTP_200_OK)
         response.set_cookie("session_id", random_key)
         return response
     else:
-        return HttpResponse("{'status': 'error', 'error': 'login failed'}")
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
-@permission_classes([IsAuthenticated])
+@api_view(['POST'])
+@permission_classes([IsAuth])
 def logout_view(request):
-    logout(request._request)
-    return Response({'status': 'Success'})
+    ssid = request.COOKIES.get("session_id")
+    print(ssid)
+    if ssid is not None:
+        if session_storage.exists(ssid):
+            session_storage.delete(ssid)
+            print(session_storage.keys('*'))
+            response = Response({'detail': 'Сеанс завершен'}, status=status.HTTP_200_OK)
+            response.delete_cookie("session_id")
+            return response
+    return Response({'detail': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -110,7 +124,15 @@ def one_filter(request, id):                        # получение одн�
 
     return Response(serializer.data)
 
-@swagger_auto_schema(method='post', request_body=FiltersSerializer)
+@swagger_auto_schema(
+    request_body=FiltersSerializer,
+    method='POST',
+    operation_summary="Создание фильтра",
+    operation_description="Доступно только модератору",
+    responses={
+        201: 'Успех',
+        400: 'Неверные данные'
+    })
 @api_view(['POST'])
 @permission_classes([IsModerator])
 def create_filter(request):                         # создание фильтра
@@ -124,7 +146,16 @@ def create_filter(request):                         # создание филь�
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@swagger_auto_schema(method='put', request_body=FiltersSerializer)
+@swagger_auto_schema(
+    request_body=FiltersSerializer,
+    method='PUT',
+    operation_summary="Изменение фильтра",
+    operation_description="Неизмененные данные сохраняются. Доступно только модератору",
+    responses={
+        200: 'Успех',
+        400: 'Неверные данные',
+        404: 'Фильтр не найден'
+    })
 @api_view(['PUT'])
 @permission_classes([IsModerator])
 def update_filter(request, id):                     # обновление данных о фильтре
@@ -139,9 +170,18 @@ def update_filter(request, id):                     # обновление да�
     if serializer.is_valid():
         serializer.save()
 
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@swagger_auto_schema(
+    request_body=FiltersSerializer,
+    method='DELETE',
+    operation_summary="Удаление фильтра",
+    operation_description="Доступно только модератору",
+    responses={
+        200: 'Успех',
+        404: 'Фильтр не найден'
+    })
 @api_view(['DELETE'])
 @permission_classes([IsModerator])
 def delete_filter(request, id):                         # удаление фильтра
@@ -155,7 +195,7 @@ def delete_filter(request, id):                         # удаление фи�
     filters = Filters.objects.filter(status=1)
     serializer = FiltersSerializer(filters, many=True)
 
-    return Response(serializer.data)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 @swagger_auto_schema(method='post', request_body=OrdersSerializer)
 @api_view(['POST'])

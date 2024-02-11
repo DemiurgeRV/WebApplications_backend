@@ -32,8 +32,9 @@ class IsAuth(permissions.BasePermission):
             return True
         return False
 
-# class IsAnon(permissions.BasePermission):
-#     def has_permission(self, request, view):
-#         if request.user.is_authenticated:
-#             return False
-#         return True
+class IsAnon(permissions.BasePermission):
+    def has_permission(self, request, view):
+        ssid = request.COOKIES.get("session_id", None)
+        if ssid != None:
+            return False
+        return True
