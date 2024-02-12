@@ -7,7 +7,7 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.response import Response
 from .serializers import *
 from drf_yasg.utils import swagger_auto_schema
-from django.contrib.auth import authenticate, logout
+from django.contrib.auth import authenticate
 from rest_framework.permissions import AllowAny
 from .permissions import *
 
