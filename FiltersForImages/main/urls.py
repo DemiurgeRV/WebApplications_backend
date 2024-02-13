@@ -29,6 +29,8 @@ urlpatterns = [
     path('login/',  views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
 
+    path('api/edit_image/<int:id>/', views.edit_image),
+
     path('api/filters/', views.filters_list),
     path('api/filters/<int:id>/', views.one_filter),
     path('api/filters/create/', views.create_filter),

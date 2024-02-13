@@ -1,4 +1,5 @@
 import uuid
+import requests
 from django.db.models import Q
 from django.http import HttpResponse
 from django.utils.dateparse import parse_datetime
@@ -10,6 +11,8 @@ from drf_yasg.utils import swagger_auto_schema
 from django.contrib.auth import authenticate
 from rest_framework.permissions import AllowAny
 from .permissions import *
+from django.http import JsonResponse
+import json
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = Users.objects.all()
@@ -371,9 +374,17 @@ def update_status_owner(request, id):                           # формиро
     order.date_formation = timezone.now()
     order.save()
 
+    response = requests.post('http://localhost:8080/edit_image/', data={'id': id})
+
     serializer = OrdersSerializer(order)
 
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(["PUT"])
+def edit_image(request, id):
+    data = json.loads(request.body)
+    print(id, ' ', data)
+    return Response(status=status.HTTP_200_OK)
 
 @swagger_auto_schema(
     request_body=OrdersSerializer,
