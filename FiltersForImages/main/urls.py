@@ -47,7 +47,10 @@ urlpatterns = [
     path('api/orders/<int:order_id>/update_filter/<int:filter_id>/', views.update_order_filter),
 
     path('api/filters/<int:id>/image/', views.get_image),
-    path('api/filters/<int:id>/image/update/', views.update_image)
+    path('api/filters/<int:id>/image/update/', views.update_image),
+
+    path('api/orders/<int:id>/image/', views.get_order_image),
+    path('api/orders/<int:id>/image/update/', views.update_order_image)
 ]
 
 

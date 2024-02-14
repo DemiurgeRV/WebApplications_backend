@@ -38,6 +38,7 @@ class Orders(models.Model):
     date_complete = models.DateTimeField(blank=True, null=True, verbose_name="Дата завершения")
     owner = models.ForeignKey("Users", on_delete=models.DO_NOTHING, blank=True, null=True, related_name="owner", verbose_name="Создатель")
     moderator = models.ForeignKey("Users", on_delete=models.DO_NOTHING, blank=True, null=True, related_name="moderator", verbose_name="Модератор")
+    image = models.ImageField(upload_to="order", blank=True, null=True, verbose_name="Фото для обработки")
 
     def __str__(self):
         return "Заказ №" + str(self.pk)

@@ -342,6 +342,7 @@ def one_order(request, id):                                 # заявка по 
 
     return Response(about_order)
 
+###############################################################################################################################################@#
 @swagger_auto_schema(
     method='PUT',
     operation_summary="Формирование заявки",
@@ -372,6 +373,10 @@ def update_status_owner(request, id):                           # формиро
 
     order.status = 2
     order.date_formation = timezone.now()
+
+    if 'image' in request.data:
+        order.image = request.data['image']
+
     order.save()
 
     response = requests.post('http://localhost:8080/edit_image/', data={'id': id})
@@ -379,12 +384,6 @@ def update_status_owner(request, id):                           # формиро
     serializer = OrdersSerializer(order)
 
     return Response(serializer.data, status=status.HTTP_200_OK)
-
-@api_view(["PUT"])
-def edit_image(request, id):
-    data = json.loads(request.body)
-    print(id, ' ', data)
-    return Response(status=status.HTTP_200_OK)
 
 @swagger_auto_schema(
     request_body=OrdersSerializer,
@@ -579,3 +578,31 @@ def update_image(request, id):
         serializer.save()
 
     return HttpResponse(filter.image, content_type="image/png")
+
+@api_view(["PUT"])
+def edit_image(request, id):
+    data = json.loads(request.body)
+    print(id, ' ', data)
+    return Response(status=status.HTTP_200_OK)
+
+@api_view(["GET"])
+def get_order_image(request, id):
+    if not Orders.objects.filter(id=id).exists():
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    order = Orders.objects.get(id=id)
+
+    return HttpResponse(order.image, content_type="image/png")
+
+@api_view(["PUT"])
+def update_order_image(request, id):
+    if not Orders.objects.filter(id=id).exists():
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    order = Orders.objects.get(id=id)
+    serializer = OrdersSerializer(order, data=request.data, partial=True)
+
+    if serializer.is_valid():
+        serializer.save()
+
+    return HttpResponse(order.image, content_type="image/png")
