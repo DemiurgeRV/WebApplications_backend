@@ -600,9 +600,7 @@ def update_order_image(request, id):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     order = Orders.objects.get(id=id)
-    serializer = OrdersSerializer(order, data=request.data, partial=True)
-
-    if serializer.is_valid():
-        serializer.save()
+    order.image = request.FILES['image']
+    order.save()
 
     return HttpResponse(order.image, content_type="image/png")
