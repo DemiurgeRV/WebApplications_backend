@@ -579,12 +579,6 @@ def update_image(request, id):
 
     return HttpResponse(filter.image, content_type="image/png")
 
-@api_view(["PUT"])
-def edit_image(request, id):
-    data = json.loads(request.body)
-    print(id, ' ', data)
-    return Response(status=status.HTTP_200_OK)
-
 @api_view(["GET"])
 def get_order_image(request, id):
     if not Orders.objects.filter(id=id).exists():
