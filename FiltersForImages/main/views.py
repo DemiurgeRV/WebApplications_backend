@@ -14,6 +14,8 @@ from .permissions import *
 from django.http import JsonResponse
 import json
 
+key = "ndscL3Jwp9kMNjknk12"
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = Users.objects.all()
     serializer_class = UsersSerializer
@@ -342,7 +344,6 @@ def one_order(request, id):                                 # заявка по 
 
     return Response(about_order)
 
-###############################################################################################################################################@#
 @swagger_auto_schema(
     method='PUT',
     operation_summary="Формирование заявки",
@@ -379,7 +380,7 @@ def update_status_owner(request, id):                           # формиро
 
     order.save()
 
-    response = requests.post('http://localhost:8080/edit_image/', data={'id': id})
+    response = requests.post('http://localhost:8080/edit_image/', data={'id': id, 'key': key})
 
     serializer = OrdersSerializer(order)
 
@@ -591,6 +592,10 @@ def get_order_image(request, id):
 @api_view(["PUT"])
 def update_order_image(request, id):
     if not Orders.objects.filter(id=id).exists():
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    getKey = request.data['key']
+    if getKey != key:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     order = Orders.objects.get(id=id)
