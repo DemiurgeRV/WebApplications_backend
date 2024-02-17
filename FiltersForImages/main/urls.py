@@ -26,8 +26,8 @@ urlpatterns = [
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('api/', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-    path('login/',  views.login_view, name='login'),
-    path('logout/', views.logout_view, name='logout'),
+    path('api/login/',  views.login_view, name='login'),
+    path('api/logout/', views.logout_view, name='logout'),
 
     path('api/filters/', views.filters_list),
     path('api/filters/<int:id>/', views.one_filter),

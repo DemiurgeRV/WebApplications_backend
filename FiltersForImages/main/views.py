@@ -72,7 +72,15 @@ def login_view(request):
     if user is not None:
         random_key = str(uuid.uuid4())
         session_storage.set(random_key, login_value)
-        response = Response(status=status.HTTP_200_OK)
+        user_data = {
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "login": user.login,
+            "password": user.password,
+            "email": user.email,
+            "role": user.role,
+        }
+        response = Response(user_data, status=status.HTTP_200_OK)
         response.set_cookie("session_id", random_key)
         return response
     else:
@@ -111,7 +119,6 @@ def filters_list(request):                          # список неудал�
     input_text = request.GET.get('search-filter')
     filters = Filters.objects.filter(name__icontains=input_text).filter(status=1) if input_text else Filters.objects.filter(status=1)
     ssid = request.COOKIES.get("session_id", None)
-    print(ssid)
     if ssid is not None:
         user_name = session_storage.get(ssid).decode('utf-8')
         user_object = Users.objects.get(login=user_name)
