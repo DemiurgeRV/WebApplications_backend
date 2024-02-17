@@ -382,8 +382,8 @@ def update_status_owner(request, id):                           # формиро
     order.status = 2
     order.date_formation = timezone.now()
 
-    if 'image' in request.data:
-        order.image = request.data['image']
+    if 'image' in request.FILES:
+        order.image = request.FILES['image']
 
     order.save()
 
