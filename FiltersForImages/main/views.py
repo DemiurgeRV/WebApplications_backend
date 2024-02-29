@@ -1,4 +1,5 @@
 from django.shortcuts import render
+import random
 
 data = {'data': {'filters': [
             {'name': 'Обрезка и поворот', 'id': 1, 'image_url': 'main/img/editor-img.png',
@@ -47,8 +48,23 @@ data = {'data': {'filters': [
               определённо для вас. За счет того, что работать будет настоящий профессионал, можете быть уверены
               что в результате вы получите по-настоящему уникальные и творческие изображения, 
               которые будут выделяться на фоне других."""},
-        ]
+        ],
+    "draft": {
+        "date_create": "2024-02-29 17:08",
+        "date_formation": "",
+        "date_complete": "",
+        "status": "Черновик"
+    }
     }}
+
+count = random.randint(2, 5)
+
+draft_filters = []
+
+for id in range(count+1):
+    for filter in data['data']['filters']:
+        if filter['id'] == id:
+            draft_filters.append(filter)
 
 def getFilters(request):
     info = []
@@ -58,12 +74,16 @@ def getFilters(request):
             if input_text.lower() in filter['name'].lower():
                 info.append(filter)
         return render(request, 'main/AllFilters.html', { 'data' : { 'filters' : info,
-                                                                    'input' : input_text
+                                                                    'input' : input_text,
+                                                                    'basket': count
                                                                     }
                                                          })
 
     else:
-        return render(request, 'main/AllFilters.html', data)
+        return render(request, 'main/AllFilters.html', { 'data' : { 'filters' : data['data']['filters'],
+                                                                    'basket': count
+                                                                    }
+                                                         })
 
 def getFilter(request, id):
     arrFilters = data['data']['filters']
@@ -72,3 +92,8 @@ def getFilter(request, id):
         if filter['id'] == id:
             choice = filter
     return render(request, 'main/OneFilter.html', choice)
+
+def getOrder(request):
+    return render(request, 'main/Order.html', { 'draft': data['data']['draft'],
+                                                'filters': draft_filters
+                                                })

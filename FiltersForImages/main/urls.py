@@ -3,5 +3,6 @@ from . import views
 
 urlpatterns = [
     path('home/', views.getFilters, name='Home'),
-    path('filter/<int:id>/', views.getFilter, name='filter_url')
+    path('filter/<int:id>/', views.getFilter, name='filter_url'),
+    path('draftOrder/', views.getOrder, name='draft-order')
 ]

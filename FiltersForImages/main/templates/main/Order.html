@@ -1,0 +1,39 @@
+{% extends 'main/base.html' %}
+
+{% load static %}
+
+{% block title %}Текущий заказ{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <div class="filter-details">
+        <a class="to-home" href="{% url 'Home' %}">Назад</a>
+        <div class="right">
+            <div class="filter-info">
+                <span>Дата создания: {{ draft.date_create }}</span><br><br>
+                <span>Дата формирования: {{ draft.date_formation }}</span><br><br>
+                <span>Дата завершения: {{ draft.date_complete }}</span><br><br>
+                <span>Статус: {{ draft.status }}</span><br><br>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Изображение</th>
+                        <th>Название</th>
+                        <th>Цена</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for filter in filters %}
+                    <tr>
+                        <td><img src="{% static '' %}{{ filter.image_url }}" class="table-images"></td>
+                        <td>{{ filter.name }}</td>
+                        <td>{{ filter.price }}₽</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
