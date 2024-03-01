@@ -7,9 +7,16 @@ from .models import *
 def getFilters(request):
     input_text = request.GET.get('search-filter')
     filters = Filters.objects.filter(name__icontains=input_text).filter(status=1) if input_text else Filters.objects.filter(status=1)
+    # draft = Orders.objects.get(id=1)
+    arrFilters = []
+    filterorder = FilterOrder.objects.filter(order_id=1)
+    for i in filterorder:
+        arrFilters.append(i.filter_id)
+    filters_list = Filters.objects.filter(id__in=arrFilters).filter(status=1)
 
     return render(request, 'main/AllFilters.html', { 'data' : { 'filters' : filters,
-                                                                'input' : input_text if input_text else ''
+                                                                'input' : input_text if input_text else '',
+                                                                'basket' : filters_list.count()
                                                                     }
                                                          })
 
@@ -22,3 +29,14 @@ def delete_filter(request, id):
     with connection.cursor() as cursor:
         cursor.execute("UPDATE main_filters SET status = 2 WHERE id = %s", [filter.pk])
     return redirect('/home')
+
+def getOrder(request):
+    draft = Orders.objects.get(id=1)
+    filters = []
+    filterorder = FilterOrder.objects.filter(order_id=1)
+    for i in filterorder:
+        filters.append(i.filter_id)
+    filters_list = Filters.objects.filter(id__in=filters).filter(status=1)
+    return render(request, 'main/Order.html', {'draft': draft,
+                                               'filters': filters_list
+                                               })

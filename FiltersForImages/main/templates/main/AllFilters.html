@@ -5,6 +5,7 @@
 {% block title %}Обработка Фотографий{% endblock %}
 
 {% block content %}
+<a href="{% url 'draft-order' %}" class="basket">Заказ: {{ data.basket }}</a>
 <div class="content-wrapper">
     <div class="cards-wrapper">
         <div class="top">

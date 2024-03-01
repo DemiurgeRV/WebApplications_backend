@@ -1,0 +1,39 @@
+{% extends 'main/base.html' %}
+
+{% load static %}
+
+{% block title %}Текущий заказ{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <div class="filter-details">
+        <a class="to-home" href="{% url 'Home' %}">Назад</a>
+        <div class="right">
+            <div class="filter-info">
+                <span>Дата создания: {{ draft.date_created }}</span><br><br>
+                <span>Дата формирования: {% if draft.date_formation %}{{ draft.date_formation }}{% else %}{% endif %}</span><br><br>
+                <span>Дата завершения: {% if draft.date_complete %}{{ draft.date_complete }}{% else %}{% endif %}</span><br><br>
+                <span>Статус: {% if draft.status == 1 %} Черновик {% endif %}</span><br><br>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Изображение</th>
+                        <th>Название</th>
+                        <th>Цена</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for filter in filters %}
+                    <tr>
+                        <td><img src="{{ filter.get_image_url }}" class="table-images"></td>
+                        <td>{{ filter.name }}</td>
+                        <td>{{ filter.price }}₽</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
